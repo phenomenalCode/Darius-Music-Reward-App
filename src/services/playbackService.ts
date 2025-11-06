@@ -1,6 +1,6 @@
 // playbackService.ts
 import { useState, useEffect } from 'react';
-import TrackPlayer, { Event, Track } from 'react-native-track-player';
+import TrackPlayer, { Event, Track , Capability} from 'react-native-track-player';
 
 // ------------------------- Safe call helper -------------------------
 const safeCall = async (fn: () => Promise<void>, action: string) => {
@@ -12,69 +12,69 @@ const safeCall = async (fn: () => Promise<void>, action: string) => {
 };
 
 // ------------------------- React Hook -------------------------
-export const usePlaybackState = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [position, setPosition] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
+// export const usePlaybackState = () => {
+//   const [isPlaying, setIsPlaying] = useState(false);
+//   const [position, setPosition] = useState(0);
+//   const [duration, setDuration] = useState(0);
+//   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
 
-  // Subscribe to TrackPlayer events
-  useEffect(() => {
-    const updatePosition = async () => {
-      const pos = await TrackPlayer.getPosition();
-      const dur = await TrackPlayer.getDuration();
-      const trackId = await TrackPlayer.getCurrentTrack();
-      const track = trackId ? await TrackPlayer.getTrack(trackId) : null;
+//   // Subscribe to TrackPlayer events
+//   useEffect(() => {
+//     const updatePosition = async () => {
+//       const pos = await TrackPlayer.getPosition();
+//       const dur = await TrackPlayer.getDuration();
+//       const trackId = await TrackPlayer.getCurrentTrack();
+//       const track = trackId ? await TrackPlayer.getTrack(trackId) : null;
 
-      setPosition(pos);
-      setDuration(dur);
-      setCurrentTrack(track);
-    };
+//       setPosition(pos);
+//       setDuration(dur);
+//       setCurrentTrack(track);
+//     };
 
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
-    const onProgress = () => updatePosition();
-    const onQueueEnded = () => console.log('Playback queue ended');
+//     const onPlay = () => setIsPlaying(true);
+//     const onPause = () => setIsPlaying(false);
+//     const onProgress = () => updatePosition();
+//     const onQueueEnded = () => console.log('Playback queue ended');
 
-    // Remote controls
-    const subscriptions = [
-      TrackPlayer.addEventListener(Event.RemotePlay, onPlay),
-      TrackPlayer.addEventListener(Event.RemotePause, onPause),
-      TrackPlayer.addEventListener(Event.RemoteNext, () => safeCall(() => TrackPlayer.skipToNext(), 'RemoteNext')),
-      TrackPlayer.addEventListener(Event.RemotePrevious, () => safeCall(() => TrackPlayer.skipToPrevious(), 'RemotePrevious')),
-      TrackPlayer.addEventListener(Event.RemoteSeek, (event) => safeCall(() => TrackPlayer.seekTo(event.position), 'RemoteSeek')),
-      TrackPlayer.addEventListener(Event.PlaybackProgressUpdated, onProgress),
-      TrackPlayer.addEventListener(Event.PlaybackQueueEnded, onQueueEnded),
-      TrackPlayer.addEventListener(Event.PlaybackError, (event) => console.error('Playback error:', event)),
-    ];
+//     // Remote controls
+//     const subscriptions = [
+//       TrackPlayer.addEventListener(Event.RemotePlay, onPlay),
+//       TrackPlayer.addEventListener(Event.RemotePause, onPause),
+//       TrackPlayer.addEventListener(Event.RemoteNext, () => safeCall(() => TrackPlayer.skipToNext(), 'RemoteNext')),
+//       TrackPlayer.addEventListener(Event.RemotePrevious, () => safeCall(() => TrackPlayer.skipToPrevious(), 'RemotePrevious')),
+//       TrackPlayer.addEventListener(Event.RemoteSeek, (event) => safeCall(() => TrackPlayer.seekTo(event.position), 'RemoteSeek')),
+//       TrackPlayer.addEventListener(Event.PlaybackProgressUpdated, onProgress),
+//       TrackPlayer.addEventListener(Event.PlaybackQueueEnded, onQueueEnded),
+//       TrackPlayer.addEventListener(Event.PlaybackError, (event) => console.error('Playback error:', event)),
+//     ];
 
-    // Initial fetch
-    updatePosition();
+//     // Initial fetch
+//     updatePosition();
 
-    return () => {
-      subscriptions.forEach((sub) => sub.remove());
-    };
-  }, []);
+//     return () => {
+//       subscriptions.forEach((sub) => sub.remove());
+//     };
+//   }, []);
 
-  // Control functions
-  const play = () => safeCall(() => TrackPlayer.play(), 'Play');
-  const pause = () => safeCall(() => TrackPlayer.pause(), 'Pause');
-  const skipNext = () => safeCall(() => TrackPlayer.skipToNext(), 'SkipNext');
-  const skipPrevious = () => safeCall(() => TrackPlayer.skipToPrevious(), 'SkipPrevious');
-  const seekTo = (seconds: number) => safeCall(() => TrackPlayer.seekTo(seconds), 'SeekTo');
+//   // Control functions
+//   const play = () => safeCall(() => TrackPlayer.play(), 'Play');
+//   const pause = () => safeCall(() => TrackPlayer.pause(), 'Pause');
+//   const skipNext = () => safeCall(() => TrackPlayer.skipToNext(), 'SkipNext');
+//   const skipPrevious = () => safeCall(() => TrackPlayer.skipToPrevious(), 'SkipPrevious');
+//   const seekTo = (seconds: number) => safeCall(() => TrackPlayer.seekTo(seconds), 'SeekTo');
 
-  return {
-    isPlaying,
-    position,
-    duration,
-    currentTrack,
-    play,
-    pause,
-    skipNext,
-    skipPrevious,
-    seekTo,
-  };
-};
+//   return {
+//     isPlaying,
+//     position,
+//     duration,
+//     currentTrack,
+//     play,
+//     pause,
+//     skipNext,
+//     skipPrevious,
+//     seekTo,
+//   };
+// };
 
 // ------------------------- Background Service -------------------------
 export default async function playbackService() {
@@ -92,4 +92,4 @@ export default async function playbackService() {
 }
 
 // For RN background service compatibility
-module.exports = playbackService;
+//module.exports = playbackService;

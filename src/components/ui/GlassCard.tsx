@@ -1,32 +1,31 @@
-// GlassCard Component
+// components/ui/GlassCard.tsx
 import React from "react";
-import { View, StyleSheet } from "react-native";
-import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
-
+import { Platform, View } from "react-native";
 import { GlassCardProps } from "../../types";
-import { THEME } from "../../constants/theme";
-
-
 
 const GlassCard: React.FC<GlassCardProps> = ({
   children,
-  blurIntensity = 20,
-  borderRadius = 16,
-  gradientColors = ['rgba(255, 255, 255, 0.1)', 'rgba(255, 255, 255, 0.05)'],
+  borderRadius = 12,
   style,
+  accessibilityLabel,
+  accessibilityHint,
 }) => {
   return (
-    <View style={[{ borderRadius, overflow: 'hidden' }, style]}>
-      <BlurView intensity={blurIntensity} style={StyleSheet.absoluteFillObject} />
-      <LinearGradient
-        colors={gradientColors}
-        style={StyleSheet.absoluteFillObject}
-      />
-      <View style={{ margin: 1, borderRadius: borderRadius - 1 }}>
-        {children}
-      </View>
+    <View
+      style={[
+        { 
+          borderRadius,
+          padding: 16,
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        },
+        style,
+      ]}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
+    >
+      {children}
     </View>
   );
 };
+
 export default GlassCard;

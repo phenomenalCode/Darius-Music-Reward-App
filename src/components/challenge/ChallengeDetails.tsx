@@ -60,7 +60,7 @@ export function ChallengeDetail({ challenge, onClose }: ChallengeDetailProps) {
   };
 
   return (
-    <BlurView intensity={80} tint="light" style={styles.container}>
+    <BlurView intensity={80} tint="light" style={{...styles.container, pointerEvents: 'box-none'}}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <GlassCard style={styles.card}>
           {/* Track Info */}

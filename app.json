@@ -1,55 +1,31 @@
 {
   "expo": {
-    "name": "musicrewards-test-app",
+    "name": "MusicRewards",
     "slug": "musicrewards-test-app",
     "version": "1.0.0",
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
+    "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "musicrewards-test-app",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.wallinex.musicrewards-test-app",
-      "infoPlist": {
-        "UIBackgroundModes": [
-          "audio"
-        ]
-      }
-    },
+    "platforms": ["ios", "android", "web"],
     "android": {
+      "package": "com.carterdarius.musicrewardstestapp",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FFFFFF"
-      },
-      "package": "com.wallinex.musicrewardstestapp",
-      "permissions": [
-        "WAKE_LOCK",
-        "FOREGROUND_SERVICE"
-      ]
+        "backgroundColor": "#ffffff"
+      }
     },
     "web": {
+      "bundler": "metro",
+      "output": "static",
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-router"
-    ],
-    "experiments": {
-      "typedRoutes": true
-    },
     "extra": {
-      "router": {
-        "origin": false
-      },
       "eas": {
         "projectId": "ebec8413-848c-478b-b20a-53fef54795a6"
       }

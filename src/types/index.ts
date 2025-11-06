@@ -47,6 +47,8 @@ export interface ChallengeCardProps {
   onPlay: (challenge: MusicChallenge) => void;
   isCurrentTrack?: boolean;
   isPlaying?: boolean;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 }
 
 export interface MusicStore {
@@ -58,7 +60,7 @@ export interface MusicStore {
   
   // Actions
   loadChallenges: () => void;
-  setCurrentTrack: (track: MusicChallenge) => void;
+  setCurrentTrack: (track: MusicChallenge | null) => void;
   updateProgress: (challengeId: string, progress: number) => void;
   markChallengeComplete: (challengeId: string) => void;
   setIsPlaying: (playing: boolean) => void;

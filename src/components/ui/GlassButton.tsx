@@ -1,88 +1,70 @@
-// GlassButton.tsx
 import React from "react";
-import {
-  Text,
-  Pressable,
-  StyleSheet,
-  ViewStyle,
-  TextStyle,
-  ActivityIndicator,
-} from "react-native";
-import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
+import { Text, Pressable, StyleSheet, Platform } from "react-native";
+import { GlassButtonProps } from "../../types";
 import { THEME } from "../../constants/theme";
 
-interface GlassButtonProps {
-  title: string;
-  onPress: () => void;
-  variant?: "primary" | "secondary";
-  disabled?: boolean;
-  loading?: boolean;
-  style?: ViewStyle;
-  textStyle?: TextStyle;
-  blurIntensity?: number;
-  borderRadius?: number;
-}
-
+/**
+ * GlassButton
+ * ------------
+ * A platform-safe, visually consistent button for web and native.
+ * Fixes click-blocking issues caused by parent layers (like GlassCard) by
+ * ensuring correct pointerEvents and zIndex.
+ */
 const GlassButton: React.FC<GlassButtonProps> = ({
   title,
   onPress,
-  variant = "primary",
-  disabled = false,
-  loading = false,
+  disabled,
   style,
-  textStyle,
-  blurIntensity = 20,
-  borderRadius = 12,
 }) => {
-  const gradientColors =
-    variant === "primary"
-      ? THEME.glass.gradientColors.primary
-      : THEME.glass.gradientColors.secondary;
-
   return (
     <Pressable
-      onPress={onPress}
-      disabled={disabled || loading}
+      onPress={() => {
+        try {
+          console.log("🎯 GlassButton pressed!", { title, disabled });
+          onPress?.();
+          console.log("✅ GlassButton onPress() executed successfully");
+        } catch (err) {
+          console.error("❌ GlassButton onPress() error:", err);
+        }
+      }}
+      disabled={disabled}
       accessibilityRole="button"
-      accessibilityLabel={title}
-      accessibilityState={{ disabled: disabled || loading }}
+      accessibilityState={{ disabled }}
+      hitSlop={10}
       style={({ pressed }) => [
+        styles.button,
         {
-          opacity: pressed || disabled ? 0.7 : 1,
+          zIndex: 10,
+          position: 'relative',
+          pointerEvents: 'auto',
+          opacity: pressed ? 0.8 : disabled ? 0.6 : 1,
+          cursor: Platform.OS === "web" ? "pointer" : "auto"
         },
-        { borderRadius },
         style,
       ]}
     >
-      <BlurView
-        intensity={blurIntensity}
-        style={[StyleSheet.absoluteFill, { borderRadius }]}
-      />
-      <LinearGradient
-        colors={gradientColors}
-        style={[StyleSheet.absoluteFill, { borderRadius }]}
-      />
-      <Text
-        style={[
-          styles.text,
-          { color: variant === "primary" ? "#fff" : THEME.colors.text.primary },
-          textStyle,
-        ]}
-      >
-        {loading ? <ActivityIndicator color="#fff" /> : title}
-      </Text>
+      <Text style={styles.text}>{title}</Text>
     </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
+  button: {
+    backgroundColor: THEME.colors.primary,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 3,
+  },
   text: {
-    fontSize: THEME.fonts.sizes.md,
+    color: "#fff",
     fontWeight: "bold",
-    textAlign: "center",
-    paddingVertical: THEME.spacing.sm,
-    paddingHorizontal: THEME.spacing.lg,
+    fontSize: 16,
   },
 });
 

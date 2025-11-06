@@ -1,11 +1,15 @@
-// index.js
-import { AppRegistry } from 'react-native';
-import TrackPlayer from 'react-native-track-player';
-import { registerRootComponent } from 'expo';
-import App from './App';
+// // index.js (Entry Point for Expo + TrackPlayer Service Registration)
+// import { registerRootComponent } from 'expo';
+// import { AppRegistry } from 'react-native';
 
-// Register the main app with Expo
-registerRootComponent(App);
 
-// Register the TrackPlayer service
-TrackPlayer.registerPlaybackService(() => require('./src/services/playbackService').default);
+
+// // Register the main app with Expo Router/Slot (handles routing)
+// const RootComponent = () => <App />;
+
+// // Register the root component with AppRegistry (fixes "global not installed" error)
+// AppRegistry.registerComponent('main', () => RootComponent);
+
+
+// // Export for Expo
+// export default RootComponent;

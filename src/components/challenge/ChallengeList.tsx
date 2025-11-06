@@ -83,19 +83,20 @@ export const ChallengeList: React.FC<ChallengeListProps> = ({
   );
 
   return (
-    <BlurView intensity={40} tint="dark" style={styles.wrapper}>
+    <BlurView intensity={40} tint="dark" style={{...styles.wrapper, pointerEvents: 'box-none'}}>
       <LinearGradient
         colors={["rgba(0,0,0,0.25)", "rgba(0,0,0,0.45)"]}
         start={[0, 0]}
         end={[0, 1]}
-        style={styles.gradient}
+        style={[styles.gradient, { pointerEvents: 'none' }]}
       />
       <FlatList
         data={challenges}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={[styles.listContainer, { pointerEvents: 'box-none' }]}
         showsVerticalScrollIndicator={false}
+        style={{ pointerEvents: 'box-none' }}
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
         }

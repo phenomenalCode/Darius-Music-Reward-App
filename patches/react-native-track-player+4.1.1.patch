@@ -1,0 +1,35 @@
+diff --git a/node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt b/node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt
+index 1a2b3c4..5d6e7f8 100644
+--- a/node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt
++++ b/node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt
+@@ -545,7 +545,7 @@ class MusicModule(
+         val bundle = arguments.getBundle("options") ?: Bundle()
+         val ratingType = RatingType.fromBundle(bundle)
+ 
+-        player.setRatingType(ratingType)
++        player.setRatingType(ratingType ?: RatingType.THUMBS_UP_DOWN)
+         promise.resolve(null)
+     }
+ 
+@@ -585,7 +585,7 @@ class MusicModule(
+         val bundle = arguments.getBundle("capabilities") ?: throw IllegalArgumentException("capabilities must be provided")
+ 
+         val capabilities = Capability.fromBundle(bundle)
+-        player.updateOptions(capabilities)
++        player.updateOptions(capabilities ?: emptyList())
+         promise.resolve(null)
+     }
+ 
+diff --git a/node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt b/node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt
+index 8f9a1b2..3c4d5e6 100644
+--- a/node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt
++++ b/node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt
+@@ -761,7 +761,7 @@ class MusicService : MediaBrowserServiceCompat(), Player.Listener {
+     }
+ 
+     // This is required for MediaBrowserServiceCompat
+-    override fun onBind(intent: Intent): IBinder? {
++    override fun onBind(intent: Intent?): IBinder? {
+         return super.onBind(intent)
+     }
+ }

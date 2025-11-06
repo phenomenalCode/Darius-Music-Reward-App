@@ -1,114 +1,110 @@
-// audioService.ts
-import { useState, useEffect } from 'react';
-import TrackPlayer, { Capability, AppKilledPlaybackBehavior, Track, Event } from 'react-native-track-player';
+// // services/audioService.ts
+// import { useCallback, useRef, useState } from 'react';
+// import { Audio, AVPlaybackStatusSuccess } from 'expo-av';
+// import type { MusicChallenge, Track } from '../types';
+// import { challengeToTrack } from '../utils/trackHelper';
+// import { useMusicStore } from '../stores/musicStores';
 
-// ------------------------- Reactive Hook -------------------------
-export const useAudioService = () => {
-  const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
-  const [position, setPosition] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
+// export const useButtonLogic = () => {
+//   const soundRef = useRef<Audio.Sound | null>(null);
 
-  // ------------------------- Safe call helper -------------------------
-  const safeCall = async (fn: () => Promise<void>, action: string) => {
-    try {
-      await fn();
-    } catch (err) {
-      console.error(`${action} error:`, err);
-    }
-  };
+//   // ====== Sync with global store ======
+//   const currentTrack = useMusicStore((s) => s.currentTrack);
+//   const setCurrentTrack = useMusicStore((s) => s.setCurrentTrack);
+//   const isPlayingGlobal = useMusicStore((s) => s.isPlaying);
+//   const setIsPlayingGlobal = useMusicStore((s) => s.setIsPlaying);
 
-  // ------------------------- Player setup -------------------------
-  const setupPlayer = async () => {
-    const running = await TrackPlayer.isServiceRunning();
-    if (running) return;
+//   const [position, setPosition] = useState(0);
+//   const [duration, setDuration] = useState(0);
 
-    await TrackPlayer.setupPlayer({ waitForBuffer: true, maxCacheSize: 1024 * 10 });
+//   // ------------------------- Play -------------------------
+//   const handlePlayTrack = useCallback(
+//     async (challenge: MusicChallenge) => {
+//       console.log('▶️ Play button pressed ->', challenge.title);
+//       try {
+//         // Unload previous sound
+//         if (soundRef.current) {
+//           await soundRef.current.unloadAsync();
+//           soundRef.current.setOnPlaybackStatusUpdate(null);
+//           soundRef.current = null;
+//         }
 
-    await TrackPlayer.updateOptions({
-      capabilities: [
-        Capability.Play,
-        Capability.Pause,
-        Capability.SkipToNext,
-        Capability.SkipToPrevious,
-        Capability.SeekTo,
-      ],
-      compactCapabilities: [Capability.Play, Capability.Pause],
-      notificationCapabilities: [Capability.Play, Capability.Pause, Capability.SeekTo],
-      android: { appKilledPlaybackBehavior: AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification },
-      alwaysPauseOnInterruption: true,
-    //   stopWithApp: false,
-    });
+//         const trackData: Track = challengeToTrack(challenge);
 
-    console.log('TrackPlayer setup complete');
-  };
+//         const { sound } = await Audio.Sound.createAsync(
+//           { uri: trackData.url },
+//           { shouldPlay: true },
+//           (status) => {
+//             const s = status as AVPlaybackStatusSuccess;
+//             // Only check if it's playing
+//             setIsPlayingGlobal(s.isPlaying);
+//             setPosition((s.positionMillis ?? 0) / 1000);
+//             setDuration((s.durationMillis ?? 0) / 1000);
+//           }
+//         );
 
-  // ------------------------- Hook Event Listeners -------------------------
-  useEffect(() => {
-    const updatePosition = async () => {
-      const pos = await TrackPlayer.getPosition();
-      const dur = await TrackPlayer.getDuration();
-      const trackId = await TrackPlayer.getCurrentTrack();
-      const track = trackId ? await TrackPlayer.getTrack(trackId) : null;
+//         soundRef.current = sound;
+//         setCurrentTrack(challenge); // Update global store
+//       } catch (err) {
+//         console.error('❌ Failed to play track:', err);
+//       }
+//     },
+//     [setCurrentTrack, setIsPlayingGlobal]
+//   );
 
-      setPosition(pos);
-      setDuration(dur);
-      setCurrentTrack(track);
-    };
+//   // ------------------------- Pause -------------------------
+//   const handlePauseTrack = useCallback(async () => {
+//     try {
+//       await soundRef.current?.pauseAsync();
+//       setIsPlayingGlobal(false);
+//     } catch (err) {
+//       console.error('❌ Failed to pause track:', err);
+//     }
+//   }, [setIsPlayingGlobal]);
 
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
+//   // ------------------------- Resume -------------------------
+//   const handleResumeTrack = useCallback(async () => {
+//     try {
+//       await soundRef.current?.playAsync();
+//       setIsPlayingGlobal(true);
+//     } catch (err) {
+//       console.error('❌ Failed to resume track:', err);
+//     }
+//   }, [setIsPlayingGlobal]);
 
-    const subscriptions = [
-      TrackPlayer.addEventListener(Event.RemotePlay, onPlay),
-      TrackPlayer.addEventListener(Event.RemotePause, onPause),
-      TrackPlayer.addEventListener(Event.PlaybackProgressUpdated, updatePosition),
-      TrackPlayer.addEventListener(Event.PlaybackQueueEnded, updatePosition),
-      TrackPlayer.addEventListener(Event.PlaybackError, (event) => console.error('Playback error:', event)),
-    ];
+//   // ------------------------- Seek -------------------------
+//   const handleSeek = useCallback(async (seconds: number) => {
+//     try {
+//       await soundRef.current?.setPositionAsync(seconds * 1000);
+//       setPosition(seconds);
+//     } catch (err) {
+//       console.error('❌ Failed to seek track:', err);
+//     }
+//   }, []);
 
-    updatePosition(); // initial fetch
+//   // ------------------------- Reset -------------------------
+//   const handleReset = useCallback(async () => {
+//     try {
+//       await soundRef.current?.unloadAsync();
+//       soundRef.current = null;
+//       setCurrentTrack(null);
+//       setIsPlayingGlobal(false);
+//       setPosition(0);
+//       setDuration(0);
+//     } catch (err) {
+//       console.error('❌ Failed to reset player:', err);
+//     }
+//   }, [setCurrentTrack, setIsPlayingGlobal]);
 
-    return () => subscriptions.forEach((sub) => sub.remove());
-  }, []);
-
-  // ------------------------- Player Controls -------------------------
-  const addTrack = async (track: Track) => {
-    await setupPlayer();
-    await safeCall(() => TrackPlayer.add(track).then(() => {}), 'Add track');
-  };
-
-  const play = async () => {
-    await safeCall(() => TrackPlayer.play(), 'Play track');
-  };
-
-  const pause = async () => {
-    await safeCall(() => TrackPlayer.pause(), 'Pause track');
-  };
-
-  const seekTo = async (seconds: number) => {
-    await safeCall(() => TrackPlayer.seekTo(seconds), 'Seek track');
-  };
-
-  const reset = async () => {
-    await safeCall(() => TrackPlayer.reset(), 'Reset player');
-    setCurrentTrack(null);
-    setPosition(0);
-    setDuration(0);
-    setIsPlaying(false);
-  };
-
-  // ------------------------- Expose Hook State -------------------------
-  return {
-    currentTrack,
-    position,
-    duration,
-    isPlaying,
-    addTrack,
-    play,
-    pause,
-    seekTo,
-    reset,
-    setupPlayer,
-  };
-};
+//   return {
+//     currentTrack,
+//     isPlaying: isPlayingGlobal,
+//     position,
+//     duration,
+//     handlePlayTrack,
+//     handlePauseTrack,
+//     handleResumeTrack,
+//     handleSeek,
+//     handleReset,
+//   };
+// };
