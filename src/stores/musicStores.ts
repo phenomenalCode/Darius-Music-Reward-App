@@ -72,8 +72,8 @@ export const useMusicStore = create<MusicStore>()(
         });
 
         // Cross-sync: Update userStore
-        useUserStore.getState().completeChallenge(challengeId);
-        useUserStore.getState().addPoints(challenge.points);
+        useUserStore.getState().completeChallenge(challengeId, challenge.points);
+        
       },
 
       setIsPlaying: (playing: boolean) => {

@@ -4,6 +4,8 @@ import { useMusicStore, selectCurrentTrack, selectIsPlaying } from '../stores/mu
 import { useUserStore } from '../stores/userStore';
 import type { MusicChallenge, UseMusicPlayerReturn } from '../types';
 import { challengeToTrack } from '../utils/trackHelper';
+import { AVPlaybackStatus } from 'expo-av';
+
 
 export const useMusicPlayer = (): UseMusicPlayerReturn => {
   const [loading, setLoading] = useState(false);
@@ -16,17 +18,17 @@ export const useMusicPlayer = (): UseMusicPlayerReturn => {
   const setCurrentPosition = useMusicStore((state) => state.setCurrentPosition);
   const updateProgress = useMusicStore((state) => state.updateProgress);
   const markChallengeComplete = useMusicStore((state) => state.markChallengeComplete);
-  const addPoints = useUserStore((state) => state.addPoints);
+  // const addPoints = useUserStore((state) => state.addPoints);
   const completeChallenge = useUserStore((state) => state.completeChallenge);
-
+  const completionLockRef = useRef(false);
   const soundRef = useRef<Audio.Sound | null>(null);
-  const [status, setStatus] = useState<any>(null); // ✅ No imported type
+  const [status, setStatus] = useState<AVPlaybackStatus | null>(null);
 
   const play = useCallback(async (track: MusicChallenge) => {
     try {
       setLoading(true);
       setError(null);
-
+      completionLockRef.current = false;
       if (soundRef.current) {
         await soundRef.current.unloadAsync();
         soundRef.current.setOnPlaybackStatusUpdate(null);
@@ -37,7 +39,7 @@ export const useMusicPlayer = (): UseMusicPlayerReturn => {
       const { sound } = await Audio.Sound.createAsync(
         { uri: trackData.url },
         { shouldPlay: true },
-        (status) => setStatus(status) // ✅ Status inferred automatically
+        (status) => setStatus(status) //  Status inferred automatically
       );
 
       soundRef.current = sound;
@@ -54,40 +56,65 @@ export const useMusicPlayer = (): UseMusicPlayerReturn => {
  
   const seekTo = useCallback(async (seconds: number) => { await soundRef.current?.setPositionAsync(seconds * 1000); }, []);
 
-  useEffect(() => {
-    if (!status) return;
+useEffect(() => {
+  if (!status) return;
 
-    const currentlyPlaying = status.isPlaying ?? false;
-    if (currentlyPlaying !== isPlaying) setIsPlaying(currentlyPlaying);
+  //  ERROR STATE (must be handled FIRST)
+  if (!status.isLoaded) {
+    setError(`Playback error: ${status.error}`);
+    setLoading(false);
+    return;
+  }
 
-    if (currentTrack) {
-      const currentSeconds = (status.positionMillis ?? 0) / 1000;
-      const durationSeconds = (status.durationMillis ?? 0) / 1000;
-      setCurrentPosition(currentSeconds);
+  //  SUCCESS STATE (TS now knows this is AVPlaybackStatusSuccess)
+  const currentlyPlaying = status.isPlaying;
+  if (currentlyPlaying !== isPlaying) {
+    setIsPlaying(currentlyPlaying);
+  }
 
-      const progressPercentage = durationSeconds ? (currentSeconds / durationSeconds) * 100 : 0;
-      updateProgress(currentTrack.id, progressPercentage);
+  
 
-      if (progressPercentage >= 90 && !currentTrack.completed) {
-        markChallengeComplete(currentTrack.id);
-        completeChallenge(currentTrack.id);
-        addPoints(currentTrack.points);
-      }
-    }
+  if (!currentTrack) return;
 
-    if (status.error) {
-      setError(`Playback error: ${status.error}`);
-      setLoading(false);
-    }
-  }, [status, currentTrack, isPlaying, setIsPlaying, setCurrentPosition, updateProgress, markChallengeComplete, completeChallenge, addPoints]);
+  const currentSeconds = (status.positionMillis ?? 0) / 1000;
+  const durationSeconds = (status.durationMillis ?? 0) / 1000;
+
+  setCurrentPosition(currentSeconds);
+
+  const progressPercentage =
+    durationSeconds > 0
+      ? (currentSeconds / durationSeconds) * 100
+      : 0;
+
+  updateProgress(currentTrack.id, progressPercentage);
+
+  if (progressPercentage >= 99 && !completionLockRef.current) {
+    completionLockRef.current = true;
+
+    markChallengeComplete(currentTrack.id);
+    completeChallenge(currentTrack.id, currentTrack.points);
+  }
+},  [
+  status,
+  currentTrack,
+  isPlaying,
+  setIsPlaying,
+  setCurrentPosition,
+  updateProgress,
+  markChallengeComplete,
+  completeChallenge,
+  // addPoints,
+]);
 
   useEffect(() => () => { soundRef.current?.unloadAsync(); }, []);
 
   return {
-    isPlaying: status?.isPlaying ?? false,
+    isPlaying: status?.isLoaded ? status.isPlaying : false,
     currentTrack,
-    currentPosition: (status?.positionMillis ?? 0) / 1000,
-    duration: (status?.durationMillis ?? 0) / 1000,
+ currentPosition: status?.isLoaded ? status.positionMillis / 1000 : 0,
+   duration: status?.isLoaded
+    ? (status.durationMillis ?? 0) / 1000
+    : 0,
     play,
     pause,
     seekTo,

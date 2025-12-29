@@ -1,57 +1,45 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useMusicStore, selectChallenges } from '../stores/musicStores';
-import { useUserStore } from '../stores/userStore';
-import { useMusicPlayer } from './useMusicPlayer';
-import type { MusicChallenge, UseChallengesReturn } from '../types';
+import type { UseChallengesReturn } from '../types';
 
 export const useChallenges = (): UseChallengesReturn => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  //  Get challenges from store
   const challenges = useMusicStore(selectChallenges);
-  const completeChallenge = useUserStore((state) => state.completeChallenge);
 
   const completedChallenges = useMemo(
     () => challenges.filter(c => c.completed).map(c => c.id),
     [challenges]
   );
 
-  const { currentTrack, currentPosition, duration } = useMusicPlayer();
+  //  Use store values directly instead of calling useMusicPlayer
+  const currentTrack = useMusicStore((s) => s.currentTrack);
+  const currentPosition = useMusicStore((s) => s.currentPosition);
+  const duration = currentTrack?.duration ?? 0;
 
-  // Keep track of already auto-completed challenges to prevent multiple calls
-  const autoCompletedRef = useRef<Set<string>>(new Set());
+  // Keep track of already "seen" challenges to avoid repeated effects
+  const seenRef = useRef<Set<string>>(new Set());
 
-  const markComplete = useCallback(
-    async (challengeId: string) => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const challenge = challenges.find(c => c.id === challengeId);
-        if (!challenge) throw new Error('Challenge not found');
-
-        completeChallenge(challengeId);
-      } catch (err: any) {
-        setError(err.message || 'Failed to complete challenge');
-      } finally {
-        setLoading(false);
-      }
+  const markSeen = useCallback(
+    (challengeId: string) => {
+      if (seenRef.current.has(challengeId)) return;
+      seenRef.current.add(challengeId);
     },
-    [challenges, completeChallenge]
+    []
   );
 
-  // Auto-complete challenges when track reaches ≥90%
+  // Track progress and "observe" challenges without completing them
   useEffect(() => {
-    if (!currentTrack || currentTrack.completed) return;
-    if (duration === 0) return;
-    if (autoCompletedRef.current.has(currentTrack.id)) return;
+    if (!currentTrack || duration <= 0) return;
+    if (seenRef.current.has(currentTrack.id)) return;
 
     const progressPercent = (currentPosition / duration) * 100;
     if (progressPercent >= 90) {
-      markComplete(currentTrack.id);
-      autoCompletedRef.current.add(currentTrack.id);
+      markSeen(currentTrack.id);
     }
-  }, [currentTrack, currentPosition, duration, markComplete]);
+  }, [currentTrack, currentPosition, duration, markSeen]);
 
   const refreshChallenges = useCallback(async () => {
     try {
@@ -60,7 +48,7 @@ export const useChallenges = (): UseChallengesReturn => {
 
       // Simulate async fetch
       await new Promise((res) => setTimeout(res, 300));
-      // Here you could replace with actual API fetch and update musicStore
+      // Could replace with real API fetch
     } catch (err: any) {
       setError(err.message || 'Failed to load challenges');
     } finally {
@@ -74,6 +62,9 @@ export const useChallenges = (): UseChallengesReturn => {
     loading,
     error,
     refreshChallenges,
-    completeChallenge: markComplete,
+    completeChallenge: (_challengeId: string): Promise<void> => {
+      // noop: usePointsCounter handles completion
+      return Promise.resolve();
+    }
   };
 };

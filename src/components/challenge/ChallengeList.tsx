@@ -1,5 +1,5 @@
 // src/components/challenge/ChallengeList.tsx
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,11 +11,13 @@ import {
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { ChallengeCard } from "./ChallengeCard";
+import ChallengeCard from "./ChallengeCard";
 import GlassCard from '../ui/GlassCard';
 import GlassButton  from '../ui/GlassButton';
 import { THEME, SAMPLE_CHALLENGES } from "../../constants/theme";
 import type { MusicChallenge } from "../../types";
+import { useMusicStore, selectCurrentPosition, selectCurrentTrack, selectIsPlaying } from '../../stores/musicStores';
+import { useUserStore } from '../../stores/userStore';
  // path suggested earlier
 
 interface ChallengeListProps {
@@ -36,6 +38,18 @@ export const ChallengeList: React.FC<ChallengeListProps> = ({
   // combined refreshing state so parent can control or local fallback is used
   const isRefreshing = refreshing || localRefreshing;
 
+  // Debug: log the challenges list on every change so we can detect removal vs visual hiding
+  useEffect(() => {
+    try {
+      console.log('🔎 ChallengeList render', {
+        count: challenges?.length ?? 0,
+        ids: (challenges || []).map((c) => c.id),
+      });
+    } catch (e) {
+      console.log('🔎 ChallengeList render error', e);
+    }
+  }, [challenges]);
+
   const handleRefresh = useCallback(async () => {
     if (onRefresh) {
       try {
@@ -47,18 +61,29 @@ export const ChallengeList: React.FC<ChallengeListProps> = ({
     }
   }, [onRefresh]);
 
+  // Pull live playback / user state so we can pass it down to ChallengeCard
+  const currentPosition = useMusicStore(selectCurrentPosition);
+  const currentTrack = useMusicStore(selectCurrentTrack);
+  const isPlaying = useMusicStore(selectIsPlaying);
+  const completedChallenges = useUserStore((s) => s.completedChallenges);
+
   const keyExtractor = useCallback((item: MusicChallenge) => item.id, []);
 
   const renderItem = useCallback(
-    ({ item }: ListRenderItemInfo<MusicChallenge>) => (
-      <ChallengeCard
-        challenge={item}
-        onPlay={onPlay}
-        isCurrentTrack={false} // if you have store selectors, pass in real value
-        isPlaying={false}
-      />
-    ),
-    [onPlay]
+    ({ item }: ListRenderItemInfo<MusicChallenge>) => {
+      const isCurrent = currentTrack?.id === item.id;
+      return (
+        <ChallengeCard
+          challenge={item}
+          onPlay={onPlay}
+          isCurrentTrack={isCurrent}
+          isPlaying={isPlaying && isCurrent}
+          currentPosition={currentPosition}
+          completedChallenges={completedChallenges}
+        />
+      );
+    },
+    [onPlay, currentTrack, isPlaying, currentPosition, completedChallenges]
   );
 
   const emptyComponent = useMemo(

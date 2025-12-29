@@ -1,56 +1,80 @@
-// Profile screen - User progress and stats (upgraded)
-import React, { useCallback } from 'react';
+// Profile screen - User progress and stats (refactored)
+import React, { useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-
-import  GlassCard  from '../../components/ui/GlassCard';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import GlassCard from '../../components/ui/GlassCard';
 import { useMusicStore, selectChallenges } from '../../stores/musicStores';
 import { useUserStore, selectTotalPoints, selectCompletedChallenges } from '../../stores/userStore';
 import { THEME } from '../../constants/theme';
-import { BlurView } from 'expo-blur';
+import { Button } from "react-native";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+
+
+
 
 export default function ProfileScreen() {
   const challenges = useMusicStore(selectChallenges);
-  const totalPoints = useUserStore(selectTotalPoints);
+ const totalPoints = useUserStore(selectTotalPoints);
   const completedChallenges = useUserStore(selectCompletedChallenges);
 
-  const totalChallenges = challenges.length;
-  const completionRate = totalChallenges > 0 ? (completedChallenges.length / totalChallenges) * 100 : 0;
+  useEffect(() => {
+    console.log(" ProfileScreen Debug — Values from Stores:");
+    console.log(" challenges:", challenges);
+    console.log(" completedChallenges:", completedChallenges);
+    console.log(" totalPoints:", totalPoints);
+  }, [challenges, completedChallenges, totalPoints]); // only log when they change
 
-  const renderChallengeItem = useCallback((challenge: typeof challenges[0]) => {
-    const isCompleted = completedChallenges.includes(challenge.id);
-    return (
-      <View
-        key={challenge.id}
-        style={styles.challengeItem}
-        accessible={true}
-        accessibilityLabel={`Challenge ${challenge.title}, ${Math.round(challenge.progress)} percent complete, ${challenge.points} points`}
-        accessibilityHint={isCompleted ? 'Completed' : 'In progress'}
-      >
-        <View style={styles.challengeHeader}>
-          <Text style={styles.challengeTitle}>{challenge.title}</Text>
-          <Text
-            style={[
-              styles.challengeStatus,
-              { color: isCompleted ? THEME.colors.secondary : THEME.colors.text.secondary },
-            ]}
-          >
-            {isCompleted ? '✅' : '⏳'}
+
+
+const totalChallenges = challenges.length;
+  const completionRate =
+    totalChallenges > 0 ? (completedChallenges.length / totalChallenges) * 100 : 0;
+
+  const renderChallengeItem = useCallback(
+    (challenge: typeof challenges[0]) => {
+      const isCompleted = completedChallenges.includes(challenge.id);
+
+      return (
+        <View
+          key={challenge.id}
+          style={styles.challengeItem}
+          accessible
+          accessibilityLabel={`Challenge ${challenge.title}, ${Math.round(
+            challenge.progress
+          )} percent complete, ${challenge.points} points`}
+          accessibilityHint={isCompleted ? 'Completed' : 'In progress'}
+        >
+          <View style={styles.challengeHeader}>
+            <Text style={styles.challengeTitle}>{challenge.title}</Text>
+            <Text
+              style={[
+                styles.challengeStatus,
+                { color: isCompleted ? THEME.colors.secondary : THEME.colors.text.secondary },
+              ]}
+            >
+              {isCompleted ? 'yes' : 'no'}
+            </Text>
+          </View>
+
+          {/* Progress Bar */}
+          <View style={styles.progressBar} accessibilityRole="progressbar">
+            <LinearGradient
+              colors={[THEME.colors.accent, THEME.colors.secondary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.progressFill, { width: `${challenge.progress}%` }]}
+            />
+          </View>
+
+          <Text style={styles.progressText}>
+            {Math.round(challenge.progress)}% • {challenge.points} points
           </Text>
         </View>
-        <View style={styles.progressBar} accessibilityRole="progressbar">
-          <View
-            style={[
-              styles.progressFill,
-              { width: `${challenge.progress}%`, backgroundColor: `linear-gradient(90deg, ${THEME.colors.accent} 0%, ${THEME.colors.secondary} 100%)` },
-            ]}
-          />
-        </View>
-        <Text style={styles.progressText}>
-          {Math.round(challenge.progress)}% • {challenge.points} points
-        </Text>
-      </View>
-    );
-  }, [completedChallenges]);
+      );
+    },
+    [completedChallenges]
+  );
 
   return (
     <ScrollView style={styles.container}>
@@ -58,43 +82,41 @@ export default function ProfileScreen() {
         <Text style={styles.header}>Your Progress</Text>
 
         {/* Stats Overview */}
-        <GlassCard style={styles.statsCard} accessibilityRole="summary">
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue} accessibilityLabel={`Total points: ${totalPoints}`}>
-                {totalPoints}
-              </Text>
-              <Text style={styles.statLabel}>Total Points</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text
-                style={styles.statValue}
-                accessibilityLabel={`Completed challenges: ${completedChallenges.length}`}
-              >
-                {completedChallenges.length}
-              </Text>
-              <Text style={styles.statLabel}>Completed</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text
-                style={styles.statValue}
-                accessibilityLabel={`Success rate: ${Math.round(completionRate)} percent`}
-              >
-                {Math.round(completionRate)}%
-              </Text>
-              <Text style={styles.statLabel}>Success Rate</Text>
-            </View>
-          </View>
-        </GlassCard>
+      
+      <GlassCard style={styles.statsCard} accessibilityRole="summary">
+  <View style={styles.statsGrid}>
+    <View style={styles.statItem}>
+      <Text style={styles.statValue} accessibilityLabel={`Total points: ${totalPoints}`}>
+        {totalPoints}
+      </Text>
+      <Text style={styles.statLabel}>Total Points</Text>
+    </View>
+
+    <View style={styles.statItem}>
+      <Text style={styles.statValue} accessibilityLabel={`Completed challenges: ${completedChallenges.length}`}>
+        {completedChallenges.length}
+      </Text>
+      <Text style={styles.statLabel}>Completed</Text>
+    </View>
+
+    <View style={styles.statItem}>
+      <Text style={styles.statValue} accessibilityLabel={`Success rate: ${Math.round(completionRate)} percent`}>
+        {Math.round(completionRate)}%
+      </Text>
+      <Text style={styles.statLabel}>Success Rate</Text>
+    </View>
+  </View>
+</GlassCard>
+
 
         {/* Challenge Progress */}
         <GlassCard style={styles.progressCard}>
           <Text style={styles.sectionTitle}>Challenge Progress</Text>
-          {challenges.length > 0
-            ? challenges.map(renderChallengeItem)
-            : (
-              <Text style={styles.noChallenges}>No challenges available</Text>
-            )}
+          {challenges.length > 0 ? (
+            challenges.map(renderChallengeItem)
+          ) : (
+            <Text style={styles.noChallenges}>No challenges available</Text>
+          )}
         </GlassCard>
 
         {/* Achievements */}
@@ -102,36 +124,15 @@ export default function ProfileScreen() {
           <Text style={styles.sectionTitle}>Achievements</Text>
 
           {totalPoints >= 100 && (
-            <View
-              style={styles.achievement}
-              accessible={true}
-              accessibilityLabel="Achievement: First 100 Points"
-            >
-              <Text style={styles.achievementIcon}>🏆</Text>
-              <Text style={styles.achievementText}>First 100 Points!</Text>
-            </View>
+            <Achievement icon="🏆" text="First 100 Points!" label="Achievement: First 100 Points" />
           )}
 
           {completedChallenges.length >= 1 && (
-            <View
-              style={styles.achievement}
-              accessible={true}
-              accessibilityLabel="Achievement: Music Lover"
-            >
-              <Text style={styles.achievementIcon}>🎵</Text>
-              <Text style={styles.achievementText}>Music Lover</Text>
-            </View>
+            <Achievement icon="🎵" text="Music Lover" label="Achievement: Music Lover" />
           )}
 
           {completionRate >= 100 && (
-            <View
-              style={styles.achievement}
-              accessible={true}
-              accessibilityLabel="Achievement: Perfect Score"
-            >
-              <Text style={styles.achievementIcon}>🌟</Text>
-              <Text style={styles.achievementText}>Perfect Score!</Text>
-            </View>
+            <Achievement icon="🌟" text="Perfect Score!" label="Achievement: Perfect Score" />
           )}
 
           {totalPoints === 0 && completedChallenges.length === 0 && (
@@ -140,11 +141,41 @@ export default function ProfileScreen() {
             </Text>
           )}
         </GlassCard>
+        {/* <Button title="Reset Points" onPress={() => useUserStore.getState().resetProgress()} /> */}
+<Button
+  title="Reset All Progress"
+  onPress={() => {
+    const resetProgress = useUserStore.getState().resetProgress;
+    resetProgress();
+    console.log("🔄 User progress reset");
+  }}
+/>
+
+
       </BlurView>
     </ScrollView>
   );
 }
 
+/* ——— Small Reusable Achievement Component ——— */
+function Achievement({
+  icon,
+  text,
+  label,
+}: {
+  icon: string;
+  text: string;
+  label: string;
+}) {
+  return (
+    <View style={styles.achievement} accessible accessibilityLabel={label}>
+      <Text style={styles.achievementIcon}>{icon}</Text>
+      <Text style={styles.achievementText}>{text}</Text>
+    </View>
+  );
+}
+
+/* ——— Styles ——— */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -158,16 +189,9 @@ const styles = StyleSheet.create({
     marginVertical: THEME.spacing.lg,
     textAlign: 'center',
   },
-  statsCard: {
-    marginBottom: THEME.spacing.md,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  statItem: {
-    alignItems: 'center',
-  },
+  statsCard: { marginBottom: THEME.spacing.md },
+  statsGrid: { flexDirection: 'row', justifyContent: 'space-around' },
+  statItem: { alignItems: 'center' },
   statValue: {
     fontSize: THEME.fonts.sizes.xl,
     fontWeight: 'bold',
@@ -178,18 +202,14 @@ const styles = StyleSheet.create({
     fontSize: THEME.fonts.sizes.sm,
     color: THEME.colors.text.secondary,
   },
-  progressCard: {
-    marginBottom: THEME.spacing.md,
-  },
+  progressCard: { marginBottom: THEME.spacing.md },
   sectionTitle: {
     fontSize: THEME.fonts.sizes.lg,
     fontWeight: 'bold',
     color: THEME.colors.text.primary,
     marginBottom: THEME.spacing.md,
   },
-  challengeItem: {
-    marginBottom: THEME.spacing.md,
-  },
+  challengeItem: { marginBottom: THEME.spacing.md },
   challengeHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -200,9 +220,7 @@ const styles = StyleSheet.create({
     fontSize: THEME.fonts.sizes.md,
     color: THEME.colors.text.primary,
   },
-  challengeStatus: {
-    fontSize: THEME.fonts.sizes.lg,
-  },
+  challengeStatus: { fontSize: THEME.fonts.sizes.lg },
   progressBar: {
     height: 6,
     borderRadius: 3,
@@ -210,10 +228,7 @@ const styles = StyleSheet.create({
     marginBottom: THEME.spacing.xs,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
-  progressFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
+  progressFill: { height: '100%', borderRadius: 3 },
   progressText: {
     fontSize: THEME.fonts.sizes.sm,
     color: THEME.colors.text.secondary,
@@ -224,9 +239,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontStyle: 'italic',
   },
-  achievementsCard: {
-    marginBottom: THEME.spacing.xl,
-  },
+  achievementsCard: { marginBottom: THEME.spacing.xl },
   achievement: {
     flexDirection: 'row',
     alignItems: 'center',

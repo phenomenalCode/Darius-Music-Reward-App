@@ -49,6 +49,7 @@ export interface ChallengeCardProps {
   isPlaying?: boolean;
   accessibilityLabel?: string;
   accessibilityHint?: string;
+  progressPercent?: number;
 }
 
 export interface MusicStore {

@@ -1,6 +1,6 @@
 // components/ui/GlassCard.tsx
-import React from "react";
-import { Platform, View } from "react-native";
+import React, { memo, useMemo } from "react";
+import { View, StyleSheet, ViewStyle } from "react-native";
 import { GlassCardProps } from "../../types";
 
 const GlassCard: React.FC<GlassCardProps> = ({
@@ -10,16 +10,18 @@ const GlassCard: React.FC<GlassCardProps> = ({
   accessibilityLabel,
   accessibilityHint,
 }) => {
+  const containerStyle = useMemo<ViewStyle[]>(
+    () => [
+      styles.base,
+      { borderRadius },
+      style as ViewStyle,
+    ],
+    [borderRadius, style]
+  );
+
   return (
     <View
-      style={[
-        { 
-          borderRadius,
-          padding: 16,
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        },
-        style,
-      ]}
+      style={containerStyle}
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
     >
@@ -28,4 +30,21 @@ const GlassCard: React.FC<GlassCardProps> = ({
   );
 };
 
-export default GlassCard;
+export default memo(GlassCard);
+
+const styles = StyleSheet.create({
+  base: {
+    padding: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    overflow: "hidden",
+
+    // Android stacking fix
+    elevation: 2,
+
+    // iOS stacking fix
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+});

@@ -31,12 +31,13 @@ const GlassButton: React.FC<GlassButtonProps> = ({
       accessibilityRole="button"
       accessibilityState={{ disabled }}
       hitSlop={10}
+      onPressIn={() => console.log('🎯 GlassButton onPressIn', title)}
       style={({ pressed }) => [
         styles.button,
         {
-          zIndex: 10,
+          // keep stacking modest so it doesn't occlude siblings
+          zIndex: 1,
           position: 'relative',
-          pointerEvents: 'auto',
           opacity: pressed ? 0.8 : disabled ? 0.6 : 1,
           cursor: Platform.OS === "web" ? "pointer" : "auto"
         },

@@ -9,6 +9,10 @@ export default function Welcome() {
     <View style={styles.container}>
       <GlassCard style={styles.card}>
         <Text style={styles.title}>Welcome to the Music Rewards App Beta</Text>
+         <Text >This was built by Darius Carter with typescript, react native and expo. With scalability in mind.
+          This project is a testament to my ability to learn and adapt to new technologies quickly.
+          Enjoy exploring the app and providing feedback!
+         </Text>
       </GlassCard>
     </View>
   );

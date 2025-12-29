@@ -1,15 +1,33 @@
-// playbackService.ts
-import { useState, useEffect } from 'react';
-import TrackPlayer, { Event, Track , Capability} from 'react-native-track-player';
+// // playbackService.ts
+// import { useState, useEffect } from 'react';
+// import TrackPlayer, { Event, Track , Capability} from 'react-native-track-player';
 
-// ------------------------- Safe call helper -------------------------
-const safeCall = async (fn: () => Promise<void>, action: string) => {
-  try {
-    await fn();
-  } catch (err) {
-    console.error(`${action} error:`, err);
-  }
-};
+// // ------------------------- Safe call helper -------------------------
+// const safeCall = async (fn: () => Promise<void>, action: string) => {
+//   try {
+//     await fn();
+//   } catch (err) {
+//     console.error(`${action} error:`, err);
+//   }
+// };
+
+// // ------------------------- Background Service -------------------------
+// export default async function playbackService() {
+//   // Register remote events for background mode
+//   TrackPlayer.addEventListener(Event.RemotePlay, () => safeCall(() => TrackPlayer.play(), 'RemotePlay'));
+//   TrackPlayer.addEventListener(Event.RemotePause, () => safeCall(() => TrackPlayer.pause(), 'RemotePause'));
+//   TrackPlayer.addEventListener(Event.RemoteNext, () => safeCall(() => TrackPlayer.skipToNext(), 'RemoteNext'));
+//   TrackPlayer.addEventListener(Event.RemotePrevious, () => safeCall(() => TrackPlayer.skipToPrevious(), 'RemotePrevious'));
+//   TrackPlayer.addEventListener(Event.RemoteSeek, (event) => safeCall(() => TrackPlayer.seekTo(event.position), 'RemoteSeek'));
+
+//   TrackPlayer.addEventListener(Event.PlaybackQueueEnded, (event) => console.log('Playback queue ended:', event));
+//   TrackPlayer.addEventListener(Event.PlaybackError, (event) => console.error('Playback error:', event));
+
+//   console.log('Playback service initialized');
+// }
+
+// For RN background service compatibility
+//module.exports = playbackService;
 
 // ------------------------- React Hook -------------------------
 // export const usePlaybackState = () => {
@@ -75,21 +93,3 @@ const safeCall = async (fn: () => Promise<void>, action: string) => {
 //     seekTo,
 //   };
 // };
-
-// ------------------------- Background Service -------------------------
-export default async function playbackService() {
-  // Register remote events for background mode
-  TrackPlayer.addEventListener(Event.RemotePlay, () => safeCall(() => TrackPlayer.play(), 'RemotePlay'));
-  TrackPlayer.addEventListener(Event.RemotePause, () => safeCall(() => TrackPlayer.pause(), 'RemotePause'));
-  TrackPlayer.addEventListener(Event.RemoteNext, () => safeCall(() => TrackPlayer.skipToNext(), 'RemoteNext'));
-  TrackPlayer.addEventListener(Event.RemotePrevious, () => safeCall(() => TrackPlayer.skipToPrevious(), 'RemotePrevious'));
-  TrackPlayer.addEventListener(Event.RemoteSeek, (event) => safeCall(() => TrackPlayer.seekTo(event.position), 'RemoteSeek'));
-
-  TrackPlayer.addEventListener(Event.PlaybackQueueEnded, (event) => console.log('Playback queue ended:', event));
-  TrackPlayer.addEventListener(Event.PlaybackError, (event) => console.error('Playback error:', event));
-
-  console.log('Playback service initialized');
-}
-
-// For RN background service compatibility
-//module.exports = playbackService;
